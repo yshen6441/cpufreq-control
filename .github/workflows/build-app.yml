@@ -1,0 +1,61 @@
+# DSH iOS App 自动构建 (macOS runner, arm64 + arm64e)
+# 产物: deb (Sileo 安装) + ipa (未签名, 配合 AppSync 或自签)
+name: Build iOS App
+
+on:
+  push:
+    paths:
+      - 'dsh-ios-app/**'
+      - '.github/workflows/build-app.yml'
+  workflow_dispatch:
+
+jobs:
+  app:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@main
+
+      - name: Checkout Theos
+        uses: actions/checkout@main
+        with:
+          repository: theos/theos
+          ref: master
+          submodules: recursive
+          path: theos
+
+      - name: Install iOS SDK 17.0 (含私有框架)
+        run: |
+          curl -L -o /tmp/sdk.zip https://github.com/xybp888/iOS-SDKs/releases/download/iOS17.0-SDKs/iPhoneOS17.0.sdk.zip
+          mkdir -p theos/sdks
+          python3 -c "import zipfile; zipfile.ZipFile('/tmp/sdk.zip').extractall('theos/sdks')"
+          rm -rf theos/sdks/__MACOSX
+          # 修复 zip 中损坏的符号链接 (含 Cryptexes 框架链接)
+          bash scripts/fix-sdk.sh theos/sdks/iPhoneOS17.0.sdk
+
+      - name: Build App (deb)
+        run: |
+          brew install make xz ldid
+          export THEOS=$PWD/theos
+          cd dsh-ios-app
+          gmake clean package FINALPACKAGE=1
+
+      - name: Package IPA
+        run: |
+          APP=$(find dsh-ios-app/.theos -name "DSH.app" -type d | head -1)
+          echo "APP dir: $APP"
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+          cd Payload && rm -f ../DSH.ipa && zip -qry ../DSH.ipa DSH.app && cd ..
+          ls -la DSH.ipa
+
+      - name: Upload deb
+        uses: actions/upload-artifact@main
+        with:
+          name: DSH-app-deb
+          path: dsh-ios-app/packages/*.deb
+
+      - name: Upload ipa
+        uses: actions/upload-artifact@main
+        with:
+          name: DSH-ipa
+          path: DSH.ipa

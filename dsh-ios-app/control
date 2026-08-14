@@ -1,0 +1,9 @@
+Package: com.infrastructure.dshapp
+Name: DSH
+Version: 1.0.0
+Architecture: iphoneos-arm64
+Description: DeepSeek Harness WebUI 客户端。打开即连 DSH 服务器，全屏 WKWebView，支持自定义服务器地址。
+Maintainer: jiqiang
+Author: jiqiang
+Section: Applications
+Depends: firmware (>= 15.0)

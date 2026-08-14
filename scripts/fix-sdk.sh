@@ -27,8 +27,11 @@ for root, dirs, files in os.walk(SDK):
             continue
         if '\n' in content or '\r' in content:
             continue
-        if not pattern.match(content) or content.startswith('.') or content.startswith('/'):
+        if not pattern.match(content):
             continue
+        if content.startswith('/'):
+            continue  # 绝对路径不是链接目标
+        # 相对路径 (含 ../), 校验目标存在后转为符号链接
         target = os.path.normpath(os.path.join(root, content))
         if os.path.exists(target):
             os.remove(p)

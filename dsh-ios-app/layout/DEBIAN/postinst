@@ -1,0 +1,9 @@
+#!/bin/bash
+# 注册 App 图标到主屏
+UICACHE=/var/jb/usr/bin/uicache
+if [ -x "$UICACHE" ]; then
+	"$UICACHE" -p /var/jb/Applications/DSH.app 2>/dev/null \
+		|| "$UICACHE" -a 2>/dev/null \
+		|| true
+fi
+exit 0
