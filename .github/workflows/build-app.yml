@@ -45,8 +45,10 @@ jobs:
           echo "APP dir: $APP"
           mkdir -p Payload
           cp -R "$APP" Payload/
-          cd Payload && rm -f ../DSH.ipa && zip -qry ../DSH.ipa DSH.app && cd ..
+          # 标准 IPA 结构: 顶层必须是 Payload/
+          zip -qry DSH.ipa Payload
           ls -la DSH.ipa
+          unzip -l DSH.ipa | head -5
 
       - name: Upload deb
         uses: actions/upload-artifact@main
