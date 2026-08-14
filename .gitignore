@@ -1,3 +1,7 @@
 .theos/
 packages/
 *.deb
+# DSH App CI 生成物
+dsh-ios-app/vendor/NodeMobile.framework
+dsh-ios-app/layout/Applications/DSH.app/runtime/
+dsh-ios-app/layout/Applications/DSH.app/Frameworks/

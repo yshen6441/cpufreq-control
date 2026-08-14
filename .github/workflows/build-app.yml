@@ -1,5 +1,5 @@
-# DSH iOS App 自动构建 (macOS runner, arm64 + arm64e)
-# 产物: deb (Sileo 安装) + ipa (未签名, 配合 AppSync 或自签)
+# DSH iOS App 自动构建: 内嵌 Node.js 本地运行 DSH (无需电脑)
+# 产物: deb (Sileo 安装) + ipa
 name: Build iOS App
 
 on:
@@ -29,8 +29,22 @@ jobs:
           mkdir -p theos/sdks
           python3 -c "import zipfile; zipfile.ZipFile('/tmp/sdk.zip').extractall('theos/sdks')"
           rm -rf theos/sdks/__MACOSX
-          # 修复 zip 中损坏的符号链接 (含 Cryptexes 框架链接)
           bash scripts/fix-sdk.sh theos/sdks/iPhoneOS17.0.sdk
+
+      - name: Checkout nodejs-mobile (node 22)
+        uses: actions/checkout@main
+        with:
+          repository: nodejs-mobile/nodejs-mobile
+          ref: update22-9-0
+          path: tools/nodejs-mobile
+
+      - name: Build Node.js 22 for iOS (~30-50min)
+        run: |
+          bash dsh-ios-app/scripts/build-node22-ios.sh "$PWD/tools/nodejs-mobile" "$PWD/dsh-ios-app/vendor"
+
+      - name: Assemble DSH runtime
+        run: |
+          bash dsh-ios-app/scripts/assemble-runtime.sh
 
       - name: Build App (deb)
         run: |
@@ -45,10 +59,8 @@ jobs:
           echo "APP dir: $APP"
           mkdir -p Payload
           cp -R "$APP" Payload/
-          # 标准 IPA 结构: 顶层必须是 Payload/
           zip -qry DSH.ipa Payload
           ls -la DSH.ipa
-          unzip -l DSH.ipa | head -5
 
       - name: Upload deb
         uses: actions/upload-artifact@main

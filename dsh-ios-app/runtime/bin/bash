@@ -1,0 +1,4 @@
+#!/bin/zsh
+# DSH iOS: bash 兼容包装 (iOS 只有 /bin/zsh, DSH 的 bash 工具硬编码 "bash")
+# 由 server.mjs 把本目录加入 PATH
+exec /bin/zsh "$@"
