@@ -19,6 +19,6 @@
 	<key>CFBundleVersion</key>
 	<string>0.0.1</string>
 	<key>NSPrincipalClass</key>
-	<string>PSListController</string>
+	<string>CPUFreqPrefsListController</string>
 </dict>
 </plist>
