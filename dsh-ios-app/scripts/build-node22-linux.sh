@@ -77,6 +77,10 @@ exec g++ "${args[@]}"
 EOF
 chmod +x "$FAKEBIN/xcrun" "$FAKEBIN/xcodebuild" "$FAKEBIN/hostcc" "$FAKEBIN/hostcxx"
 
+# 调试: 打印生成的包装脚本
+echo "=== hostcc 内容 ==="
+cat "$FAKEBIN/hostcc"
+
 # ── configure ──────────────────────────────────────────────
 cd "$SRC"
 echo "==> node 版本:"
