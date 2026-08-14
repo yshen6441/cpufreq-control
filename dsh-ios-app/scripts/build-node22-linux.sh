@@ -59,7 +59,7 @@ for a in "$@"; do
   esac
   args+=("$a")
 done
-exec gcc "${args[@]}"
+exec gcc -D_GNU_SOURCE "${args[@]}"
 EOF
 cat > "$FAKEBIN/hostcxx" <<'EOF'
 #!/bin/bash
@@ -73,13 +73,10 @@ for a in "$@"; do
   esac
   args+=("$a")
 done
-exec g++ "${args[@]}"
+exec g++ -D_GNU_SOURCE "${args[@]}"
 EOF
 chmod +x "$FAKEBIN/xcrun" "$FAKEBIN/xcodebuild" "$FAKEBIN/hostcc" "$FAKEBIN/hostcxx"
 
-# 调试: 打印生成的包装脚本
-echo "=== hostcc 内容 ==="
-cat "$FAKEBIN/hostcc"
 
 # ── configure ──────────────────────────────────────────────
 cd "$SRC"
