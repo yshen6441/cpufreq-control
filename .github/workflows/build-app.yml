@@ -45,7 +45,7 @@ jobs:
           done
           xcode-select -p
 
-      - name: Free Disk Space (官方做法: 删多余 Xcode 与开发框架)
+      - name: "Free Disk Space (官方做法: 删多余 Xcode 与开发框架)"
         run: |
           sudo rm -rf /Library/Frameworks/Mono.framework
           sudo rm -rf /Library/Frameworks/Xamarin.iOS.framework
