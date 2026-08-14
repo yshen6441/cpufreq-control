@@ -80,6 +80,11 @@ chmod +x "$FAKEBIN/xcrun" "$FAKEBIN/xcodebuild" "$FAKEBIN/hostcc" "$FAKEBIN/host
 
 # ── configure ──────────────────────────────────────────────
 cd "$SRC"
+# ── patch gyp: apple 源文件只用于 target (host 不编 darwin.c) ──
+cd "$SRC"
+sed -i "s/'OS in \"mac ios\"'/'OS in \"mac ios\" and toolset==\"target\"'/g" deps/uv/uv.gyp
+grep -n 'toolset==\"target\"' deps/uv/uv.gyp | head -3
+
 echo "==> node 版本:"
 grep -E "NODE_MAJOR_VERSION|NODE_MINOR_VERSION|NODE_PATCH_VERSION" src/node_version.h | head -3
 export GYP_DEFINES="target_arch=arm64 host_os=linux target_os=ios"
