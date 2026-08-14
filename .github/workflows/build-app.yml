@@ -11,7 +11,7 @@ on:
 
 jobs:
   app:
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@main
 
@@ -30,6 +30,20 @@ jobs:
           python3 -c "import zipfile; zipfile.ZipFile('/tmp/sdk.zip').extractall('theos/sdks')"
           rm -rf theos/sdks/__MACOSX
           bash scripts/fix-sdk.sh theos/sdks/iPhoneOS17.0.sdk
+
+      - name: Select Xcode 16 (node 22.9 与 Xcode 26 不兼容)
+        run: |
+          echo "可用 Xcode:"
+          ls /Applications | grep -i xcode || true
+          echo "当前: $(xcode-select -p)"
+          for V in 16.4 16.3 16.2 16.1 16.0 15.4 15.2; do
+            if [ -d "/Applications/Xcode_$V.app" ]; then
+              sudo xcode-select -s "/Applications/Xcode_$V.app"
+              echo "已选择 Xcode $V"
+              break
+            fi
+          done
+          xcode-select -p
 
       - name: Checkout nodejs-mobile (node 22)
         uses: actions/checkout@main
