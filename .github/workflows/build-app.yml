@@ -11,7 +11,7 @@ on:
 
 jobs:
   app:
-    runs-on: macos-15
+    runs-on: macos-14
     steps:
       - uses: actions/checkout@main
 
@@ -44,6 +44,13 @@ jobs:
             fi
           done
           xcode-select -p
+
+      - name: 内存诊断
+        run: |
+          sysctl hw.memsize
+          vm_stat | head -6
+          sysctl vm.swapusage
+          ulimit -a
 
       - name: Checkout nodejs-mobile (node 22)
         uses: actions/checkout@main
