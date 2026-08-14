@@ -23,11 +23,14 @@ jobs:
           submodules: recursive
           path: theos
 
-      - name: Install iOS SDK 16.5
+      - name: Install iOS SDK 17.0 (含私有框架)
         run: |
-          curl -L -o /tmp/sdk.tar.xz https://github.com/theos/sdks/releases/download/master-146e41f/iPhoneOS16.5.sdk.tar.xz
+          curl -L -o /tmp/sdk.zip https://github.com/xybp888/iOS-SDKs/releases/download/iOS17.0-SDKs/iPhoneOS17.0.sdk.zip
           mkdir -p theos/sdks
-          tar -xJf /tmp/sdk.tar.xz -C theos/sdks
+          python3 -c "import zipfile; zipfile.ZipFile('/tmp/sdk.zip').extractall('theos/sdks')"
+          rm -rf theos/sdks/__MACOSX
+          # 修复 zip 中损坏的符号链接 (见 scripts/fix-sdk.sh)
+          bash scripts/fix-sdk.sh theos/sdks/iPhoneOS17.0.sdk
           ls theos/sdks
 
       - name: Build Package
