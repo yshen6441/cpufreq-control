@@ -13,8 +13,8 @@ echo "==> 确认 node 版本"
 grep -E "NODE_MAJOR_VERSION|NODE_MINOR_VERSION|NODE_PATCH_VERSION" src/node_version.h | head -3
 
 echo "==> 限制 make 并行度为 -j2 (防 OOM)"
-sed -i.bak 's/make -j$(getconf _NPROCESSORS_ONLN)/make -j2/g' tools/ios_framework_prepare.sh
-grep -n "make -j2" tools/ios_framework_prepare.sh | head -3
+sed -i.bak 's/make -j$(getconf _NPROCESSORS_ONLN)/make -j1/g' tools/ios_framework_prepare.sh
+grep -n "make -j1" tools/ios_framework_prepare.sh | head -3
 
 echo "==> 构建 (官方流程: configure + make + xcodebuild)"
 bash tools/ios_framework_prepare.sh arm64
