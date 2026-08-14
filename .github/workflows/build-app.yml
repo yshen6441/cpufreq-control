@@ -11,7 +11,7 @@ on:
 
 jobs:
   app:
-    runs-on: macos-14
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@main
 
