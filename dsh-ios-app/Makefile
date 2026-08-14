@@ -12,15 +12,15 @@ export THEOS_PACKAGE_SCHEME := rootless
 export DEBUG := 0
 export FINALPACKAGE := 1
 
-ifeq ($(shell uname),Linux)
+# 重要: App 统一 arm64 切片 (内嵌的 NodeMobile.framework 是 arm64-only;
+#       iOS 14.4+ 的 arm64e 进程无法加载 arm64 dylib, 所以 App 不用 arm64e)
 export ARCHS := arm64
+ifeq ($(shell uname),Linux)
 export TARGET_CC := clang-19
 export TARGET_CXX := clang++-19
 export TARGET_LD := clang-19
 export TARGET_STRIP := llvm-strip-19
 ADDITIONAL_LDFLAGS = -fuse-ld=lld -B/usr/local/bin
-else
-export ARCHS := arm64 arm64e
 endif
 
 include $(THEOS)/makefiles/common.mk

@@ -1,5 +1,7 @@
 # DSH iOS App 自动构建: 内嵌 Node.js 本地运行 DSH (无需电脑)
-# 产物: deb (Sileo 安装) + ipa
+# 流水线:
+#   1. build-node: ubuntu (16GB) 交叉编译 node 22 for iOS -> NodeMobile.framework
+#   2. app: macOS 组装 DSH runtime + 构建 App (deb + ipa)
 name: Build iOS App
 
 on:
@@ -10,10 +12,61 @@ on:
   workflow_dispatch:
 
 jobs:
-  app:
-    runs-on: macos-13
+  build-node:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@main
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang-19 lld-19 xz-utils
+
+      - name: Build ldid
+        run: |
+          git clone --depth 1 https://github.com/xerub/ldid /tmp/ldid
+          cd /tmp/ldid && bash make.sh
+          sudo cp ldid /usr/local/bin/ldid
+
+      - name: Install iOS SDK 17.0
+        run: |
+          curl -L -o /tmp/sdk.zip https://github.com/xybp888/iOS-SDKs/releases/download/iOS17.0-SDKs/iPhoneOS17.0.sdk.zip
+          mkdir -p /opt/theos/sdks
+          python3 -c "import zipfile; zipfile.ZipFile('/tmp/sdk.zip').extractall('/opt/theos/sdks')"
+          rm -rf /opt/theos/sdks/__MACOSX
+          bash scripts/fix-sdk.sh /opt/theos/sdks/iPhoneOS17.0.sdk
+
+      - name: Checkout nodejs-mobile (node 22)
+        uses: actions/checkout@main
+        with:
+          repository: nodejs-mobile/nodejs-mobile
+          ref: update22-9-0
+          path: tools/nodejs-mobile
+
+      - name: Cross-compile Node.js 22 for iOS (~40-70min)
+        run: |
+          bash dsh-ios-app/scripts/build-node22-linux.sh \
+            "$PWD/tools/nodejs-mobile" \
+            "$PWD/dsh-ios-app/vendor" \
+            "/opt/theos/sdks/iPhoneOS17.0.sdk"
+
+      - name: Upload NodeMobile.framework
+        uses: actions/upload-artifact@main
+        with:
+          name: NodeMobile-framework
+          path: dsh-ios-app/vendor/NodeMobile.framework
+
+  app:
+    runs-on: macos-latest
+    needs: build-node
+    steps:
+      - uses: actions/checkout@main
+
+      - name: Download NodeMobile.framework
+        uses: actions/download-artifact@main
+        with:
+          name: NodeMobile-framework
+          path: dsh-ios-app/vendor/
 
       - name: Checkout Theos
         uses: actions/checkout@main
@@ -30,61 +83,6 @@ jobs:
           python3 -c "import zipfile; zipfile.ZipFile('/tmp/sdk.zip').extractall('theos/sdks')"
           rm -rf theos/sdks/__MACOSX
           bash scripts/fix-sdk.sh theos/sdks/iPhoneOS17.0.sdk
-
-      - name: Select Xcode 16 (node 22.9 与 Xcode 26 不兼容)
-        run: |
-          echo "可用 Xcode:"
-          ls /Applications | grep -i xcode || true
-          echo "当前: $(xcode-select -p)"
-          for V in 16.4 16.3 16.2 16.1 16.0 15.4 15.2; do
-            if [ -d "/Applications/Xcode_$V.app" ]; then
-              sudo xcode-select -s "/Applications/Xcode_$V.app"
-              echo "已选择 Xcode $V"
-              break
-            fi
-          done
-          xcode-select -p
-
-      - name: "Free Disk Space (官方做法: 删多余 Xcode 与开发框架)"
-        run: |
-          sudo rm -rf /Library/Frameworks/Mono.framework
-          sudo rm -rf /Library/Frameworks/Xamarin.iOS.framework
-          sudo rm -rf /Library/Frameworks/Xamarin.Android.framework
-          sudo rm -rf /Users/runner/Library/Android
-          sudo rm -rf /usr/local/share/powershell
-          SELECTED=$(xcode-select -p | sed 's|/Contents/Developer||')
-          echo "保留: $SELECTED"
-          for d in /Applications/Xcode_*.app; do
-            if [ "$d" != "$SELECTED" ] && [ -d "$d" ]; then
-              echo "删除: $d"
-              sudo rm -rf "$d"
-            fi
-          done
-          df -h / | tail -1
-
-      - name: 内存诊断
-        run: |
-          sysctl hw.memsize
-          vm_stat | head -6
-          sysctl vm.swapusage
-          ulimit -a
-
-      - name: Checkout nodejs-mobile (node 22)
-        uses: actions/checkout@main
-        with:
-          repository: nodejs-mobile/nodejs-mobile
-          ref: update22-9-0
-          path: tools/nodejs-mobile
-
-      - name: Build Node.js 22 for iOS (~30-50min)
-        run: |
-          bash dsh-ios-app/scripts/build-node22-ios.sh "$PWD/tools/nodejs-mobile" "$PWD/dsh-ios-app/vendor" || {
-            echo "=== JETSAM/内存诊断 ==="
-            log show --last 3m --predicate 'eventMessage CONTAINS[c] "jetsam" OR eventMessage CONTAINS[c] "memorystatus"' --style compact 2>/dev/null | tail -30
-            df -h /
-            sysctl vm.swapusage
-            exit 1
-          }
 
       - name: Assemble DSH runtime
         run: |
