@@ -15,7 +15,6 @@ cat > "$FAKEBIN/xcrun" <<EOF
 SDK="$SDK"
 if [[ "\$*" == *"--show-sdk-path"* ]]; then echo "\$SDK"; exit 0; fi
 if [[ "\$*" == *"--show-sdk-version"* ]]; then echo "17.0"; exit 0; fi
-for i in "\${!args[@]}"; do :; done
 args=("\$@")
 for i in "\${!args[@]}"; do
   if [[ "\${args[\$i]}" == "-f" || "\${args[\$i]}" == "--find" ]]; then
@@ -46,7 +45,37 @@ if [[ "\$*" == *"-version"* ]]; then
 fi
 exit 0
 EOF
-chmod +x "$FAKEBIN/xcrun" "$FAKEBIN/xcodebuild"
+
+# ── host 编译器包装 (过滤 iOS 专属 flags) ──────────────────
+cat > "$FAKEBIN/hostcc" <<'EOF'
+#!/bin/bash
+args=()
+skip=0
+for a in "$@"; do
+  if [ "$skip" = "1" ]; then skip=0; continue; fi
+  case "$a" in
+    -arch|-isysroot|-target|-mios-version-min=*|-miphoneos-version-min=*) skip=1; continue;;
+    -stdlib=libc++|-fembed-bitcode) continue;;
+  esac
+  args+=("$a")
+done
+exec gcc "${args[@]}"
+EOF
+cat > "$FAKEBIN/hostcxx" <<'EOF'
+#!/bin/bash
+args=()
+skip=0
+for a in "$@"; do
+  if [ "$skip" = "1" ]; then skip=0; continue; fi
+  case "$a" in
+    -arch|-isysroot|-target|-mios-version-min=*|-miphoneos-version-min=*) skip=1; continue;;
+    -stdlib=libc++|-fembed-bitcode) continue;;
+  esac
+  args+=("$a")
+done
+exec g++ "${args[@]}"
+EOF
+chmod +x "$FAKEBIN/xcrun" "$FAKEBIN/xcodebuild" "$FAKEBIN/hostcc" "$FAKEBIN/hostcxx"
 
 # ── configure ──────────────────────────────────────────────
 cd "$SRC"
@@ -55,8 +84,8 @@ grep -E "NODE_MAJOR_VERSION|NODE_MINOR_VERSION|NODE_PATCH_VERSION" src/node_vers
 export GYP_DEFINES="target_arch=arm64 host_os=linux target_os=ios"
 export CC="clang-19 --target=arm64-apple-ios15.0 -isysroot $SDK"
 export CXX="clang++-19 --target=arm64-apple-ios15.0 -isysroot $SDK"
-export CC_host="gcc"
-export CXX_host="g++"
+export CC_host="$FAKEBIN/hostcc"
+export CXX_host="$FAKEBIN/hostcxx"
 export PATH="$FAKEBIN:$PATH"
 ./configure --dest-os=ios --dest-cpu=arm64 --cross-compiling \
   --with-intl=none --enable-static --openssl-no-asm \
