@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>items</key>
+	<array>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>总开关</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>defaults</key>
+			<string>com.infrastructure.cpufreq</string>
+			<key>key</key>
+			<string>Enabled</string>
+			<key>label</key>
+			<string>启用限频</string>
+			<key>default</key>
+			<true/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>限频模式</string>
+			<key>footerText</key>
+			<string>原理: 通过"热仿真"让系统把CPU最高频率限制到指定档位（与 Powercuff 相同机制）。档位越高，CPU频率上限越低。注意: 无法超频，只能限频。</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSMultiValueCell</string>
+			<key>defaults</key>
+			<string>com.infrastructure.cpufreq</string>
+			<key>key</key>
+			<string>Mode</string>
+			<key>label</key>
+			<string>模式</string>
+			<key>default</key>
+			<integer>0</integer>
+			<key>validValues</key>
+			<array>
+				<integer>0</integer>
+				<integer>1</integer>
+				<integer>2</integer>
+				<integer>3</integer>
+				<integer>4</integer>
+			</array>
+			<key>validTitles</key>
+			<array>
+				<string>关闭 (不限制)</string>
+				<string>标准 nominal</string>
+				<string>轻度 light</string>
+				<string>中度 moderate</string>
+				<string>重度 heavy</string>
+			</array>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSTextFieldCell</string>
+			<key>defaults</key>
+			<string>com.infrastructure.cpufreq</string>
+			<key>key</key>
+			<string>CustomMode</string>
+			<key>label</key>
+			<string>自定义模式字符串</string>
+			<key>placeholder</key>
+			<string>如: moderate（留空则用上面的模式）</string>
+			<key>isSecure</key>
+			<false/>
+			<key>autoCorrectionType</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSSwitchCell</string>
+			<key>defaults</key>
+			<string>com.infrastructure.cpufreq</string>
+			<key>key</key>
+			<string>RequireLowPowerMode</string>
+			<key>label</key>
+			<string>仅低电量模式下生效</string>
+			<key>default</key>
+			<false/>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSButtonCell</string>
+			<key>label</key>
+			<string>立即应用</string>
+			<key>action</key>
+			<string>applyNow</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSGroupCell</string>
+			<key>label</key>
+			<string>实时频率</string>
+			<key>footerText</key>
+			<string>每秒刷新。P核为高性能核心(大核)，E核为低功耗核心(小核)。</string>
+		</dict>
+		<dict>
+			<key>cell</key>
+			<string>PSStaticTextCell</string>
+			<key>defaults</key>
+			<string>com.infrastructure.cpufreq</string>
+			<key>key</key>
+			<string>LiveFreq</string>
+			<key>label</key>
+			<string>当前频率</string>
+		</dict>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,9 @@
+Package: com.infrastructure.cpufreq
+Name: CPUFreqControl
+Version: 0.0.1
+Architecture: iphoneos-arm64
+Description: 自定义CPU限频 + 实时频率显示（P/E核）。基于热仿真机制限制CPU最高频率，支持多档模式、自定义模式字符串、低电量模式联动。适用于 iOS 15-17 / Dopamine rootless。
+Maintainer: jiqiang
+Author: jiqiang
+Section: Tweaks
+Depends: mobilesubstrate (>= 0.9.7000), preferenceloader
