@@ -5,7 +5,8 @@
 #       arm64e "新ABI" 代码, 该 ABI 只能在 macOS 上编译。
 #       Linux 上只能编 arm64 (给 arm64 设备用, 或调试用)。
 
-export TARGET := iphone:clang:latest:15.0
+# 显式指定 SDK 17.0 (不能用 latest: macOS 上会优先选 Xcode 自带的无私有框架 SDK)
+export TARGET := iphone:clang:17.0:15.0
 export THEOS_PACKAGE_SCHEME := rootless
 export DEBUG := 0
 export FINALPACKAGE := 1
