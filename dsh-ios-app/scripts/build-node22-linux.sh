@@ -80,11 +80,6 @@ chmod +x "$FAKEBIN/xcrun" "$FAKEBIN/xcodebuild" "$FAKEBIN/hostcc" "$FAKEBIN/host
 
 # ── configure ──────────────────────────────────────────────
 cd "$SRC"
-# ── patch gyp: apple 源文件只用于 target (host 不编 darwin.c) ──
-cd "$SRC"
-sed -i "s/'OS in \"mac ios\"'/'OS in \"mac ios\" and toolset==\"target\"'/g" deps/uv/uv.gyp
-grep -n 'toolset==\"target\"' deps/uv/uv.gyp | head -3
-
 echo "==> node 版本:"
 grep -E "NODE_MAJOR_VERSION|NODE_MINOR_VERSION|NODE_PATCH_VERSION" src/node_version.h | head -3
 export GYP_DEFINES="target_arch=arm64 host_os=linux target_os=ios"
@@ -99,6 +94,12 @@ export PATH="$FAKEBIN:$PATH"
   --without-node-snapshot --without-amaro 2>&1 | tail -3
 
 # ── make ───────────────────────────────────────────────────
+echo "==> patch host makefiles (移除 apple 源文件)"
+for f in darwin.c fsevents.c darwin-proctitle.c random-getentropy.c; do
+  sed -i "s|../deps/uv/src/unix/$f||g" out/Release/deps/uv/libuv.host.mk 2>/dev/null || true
+done
+echo "libuv.host.mk 中 darwin.c 剩余: $(grep -c 'darwin.c' out/Release/deps/uv/libuv.host.mk || echo 0)"
+
 echo "==> make -j4 (约 40-70 分钟)"
 make -j4
 
