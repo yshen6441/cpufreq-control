@@ -45,6 +45,23 @@ jobs:
           done
           xcode-select -p
 
+      - name: Free Disk Space (官方做法: 删多余 Xcode 与开发框架)
+        run: |
+          sudo rm -rf /Library/Frameworks/Mono.framework
+          sudo rm -rf /Library/Frameworks/Xamarin.iOS.framework
+          sudo rm -rf /Library/Frameworks/Xamarin.Android.framework
+          sudo rm -rf /Users/runner/Library/Android
+          sudo rm -rf /usr/local/share/powershell
+          SELECTED=$(xcode-select -p | sed 's|/Contents/Developer||')
+          echo "保留: $SELECTED"
+          for d in /Applications/Xcode_*.app; do
+            if [ "$d" != "$SELECTED" ] && [ -d "$d" ]; then
+              echo "删除: $d"
+              sudo rm -rf "$d"
+            fi
+          done
+          df -h / | tail -1
+
       - name: 内存诊断
         run: |
           sysctl hw.memsize
@@ -61,7 +78,13 @@ jobs:
 
       - name: Build Node.js 22 for iOS (~30-50min)
         run: |
-          bash dsh-ios-app/scripts/build-node22-ios.sh "$PWD/tools/nodejs-mobile" "$PWD/dsh-ios-app/vendor"
+          bash dsh-ios-app/scripts/build-node22-ios.sh "$PWD/tools/nodejs-mobile" "$PWD/dsh-ios-app/vendor" || {
+            echo "=== JETSAM/内存诊断 ==="
+            log show --last 3m --predicate 'eventMessage CONTAINS[c] "jetsam" OR eventMessage CONTAINS[c] "memorystatus"' --style compact 2>/dev/null | tail -30
+            df -h /
+            sysctl vm.swapusage
+            exit 1
+          }
 
       - name: Assemble DSH runtime
         run: |
