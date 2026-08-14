@@ -69,7 +69,7 @@ for a in "$@"; do
   if [ "$skip" = "1" ]; then skip=0; continue; fi
   case "$a" in
     -arch|-isysroot|-target) skip=1; continue;;
-    -stdlib=libc++|-fembed-bitcode) continue;;
+    -mios-version-min=*|-miphoneos-version-min=*|-stdlib=libc++|-fembed-bitcode) continue;;
   esac
   args+=("$a")
 done
