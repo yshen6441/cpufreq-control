@@ -5,7 +5,6 @@
 #       arm64e "新ABI" 代码, 该 ABI 只能在 macOS 上编译。
 #       Linux 上只能编 arm64 (给 arm64 设备用, 或调试用)。
 
-# 显式指定 SDK 17.0 (不能用 latest: macOS 上会优先选 Xcode 自带的无私有框架 SDK)
 export TARGET := iphone:clang:17.0:15.0
 export THEOS_PACKAGE_SCHEME := rootless
 export DEBUG := 0
@@ -35,11 +34,5 @@ CPUFreq_CFLAGS = -fno-objc-arc -Wno-deprecated-declarations -Wno-objc-messaging-
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 
-BUNDLE_NAME = CPUFreqPrefs
-CPUFreqPrefs_FILES = CPUFreqPrefs.m ioreport.m
-CPUFreqPrefs_INSTALL_PATH = /Library/PreferenceBundles
-CPUFreqPrefs_FRAMEWORKS = UIKit
-CPUFreqPrefs_PRIVATE_FRAMEWORKS = Preferences
-CPUFreqPrefs_CFLAGS = -fobjc-arc
-
-include $(THEOS_MAKE_PATH)/bundle.mk
+# 设置面板为纯 plist 模式 (PreferenceLoader 直接渲染, 无需编译 bundle,
+# 与 Powercuff 同款方案, 在 Dopamine iOS 15-17 上验证可用)
